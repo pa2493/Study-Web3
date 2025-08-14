@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Study App Chat</title>
+    <link rel="stylesheet" href="styles.css" />
+</head>
+
+<body>
+    <div class="app-container">
+        <aside class="sidebar">
+            <h2>📚 Study Channels</h2>
+            <ul>
+                <li class="active" data-channel="chat"># Chat</li>
+                <li data-channel="doubts"># Doubts</li>
+                <li data-channel="notes"># Notes</li>
+                <li data-channel="videos"># Study Videos</li>
+                <li data-channel="resources"># Resources</li>
+                <li data-channel="papers"># Exam Papers</li>
+                <li data-channel="goals"># Study Goals</li>
+                <li data-channel="todo"># To-Do List</li>
+                <li data-channel="leaderboard"># Leaderboard</li>
+            </ul>
+        </aside>
+
+        <main class="chat-area">
+            <div class="messages" id="messages"></div>
+            <div class="message-input">
+                <input type="text" id="messageInput" placeholder="Type a message..." />
+                <button id="sendBtn">Send</button>
+            </div>
+        </main>
+    </div>
+
+    <!-- Firebase SDKs -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js"; import { getFirestore, collection, addDoc, serverTimestamp, onSnapshot, orderBy, query } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+        // Firebase config const firebaseConfig = { apiKey: "YOUR_API_KEY", authDomain: "YOUR_PROJECT_ID.firebaseapp.com", projectId: "YOUR_PROJECT_ID", storageBucket: "YOUR_PROJECT_ID.appspot.com", messagingSenderId: "YOUR_SENDER_ID", appId: "YOUR_APP_ID"
+        // Init Firebase const app = initializeApp(firebaseConfig); const db = getFirestore(app); const defaultAvatar = "https://i.imgur.com/0y0y0y0.png"; // change to your image const randomUsername = "User" + Math.floor(1000 + Math.random() * 9000);
+        let currentChannel = "chat"; // Send message document.getElementById("sendBtn").addEventListener("click", async () => { const input = document.getElementById("messageInput"); const text = input.value.trim(); if (!text) return; await addDoc(collection(db,
+        "channels", currentChannel, "messages"), { username: randomUsername, avatar: defaultAvatar, text, timestamp: serverTimestamp() }); input.value = ""; }); // Channel switching document.querySelectorAll(".sidebar li").forEach(li => { li.addEventListener("click",
+        () => { document.querySelector(".sidebar li.active")?.classList.remove("active"); li.classList.add("active"); currentChannel = li.dataset.channel; loadMessages(); }); }); // Load messages function loadMessages() { const messagesDiv = document.getElementById("messages");
+        messagesDiv.innerHTML = ""; const q = query( collection(db, "channels", currentChannel, "messages"), orderBy("timestamp") ); onSnapshot(q, snapshot => { messagesDiv.innerHTML = ""; snapshot.forEach(doc => { const msg = doc.data(); const el = document.createElement("div");
+        el.classList.add("message"); el.innerHTML = `
+        <img src="${msg.avatar || defaultAvatar}" alt="Avatar">
+        <div>
+            <strong>${msg.username}</strong>
+            <div class="message-content">${msg.text}</div>
+        </div>
+        `; messagesDiv.appendChild(el); }); messagesDiv.scrollTop = messagesDiv.scrollHeight; }); } // First load loadMessages();
+    </script>
+</body>
+
+</html>
